@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CKA Prep">
+<meta name="theme-color" content="#0f0f11">
+<title>CKA Prep</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0f0f11;
+    --surface: #17171a;
+    --surface2: #1f1f24;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f0f0f2;
+    --muted: #8b8b96;
+    --hint: #5a5a66;
+    --accent: #5b6af0;
+    --accent-bg: rgba(91,106,240,0.12);
+    --accent-text: #9ba8f8;
+    --green: #22c77a;
+    --green-bg: rgba(34,199,122,0.1);
+    --green-text: #5ddea0;
+    --red: #e05252;
+    --red-bg: rgba(224,82,82,0.1);
+    --red-text: #f08080;
+    --amber: #e09a30;
+    --amber-bg: rgba(224,154,48,0.1);
+    --amber-text: #f0bb6a;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+    --r: 10px;
+    --r-sm: 6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100dvh;
+    overscroll-behavior: none;
+  }
+
+  #app {
+    max-width: 460px;
+    margin: 0 auto;
+    padding: 0 0 90px;
+    min-height: 100dvh;
+  }
+
+  /* ─── top bar ─── */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(15,15,17,0.9);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 16px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .topbar-wordmark { font-size: 17px; font-weight: 600; letter-spacing: -0.02em; color: var(--text); }
+  .topbar-wordmark span { color: var(--accent-text); }
+  .streak-pill {
+    display: flex; align-items: center; gap: 5px;
+    background: var(--amber-bg); border: 1px solid rgba(224,154,48,0.2);
+    border-radius: 20px; padding: 4px 10px;
+    font-size: 12px; font-weight: 500; color: var(--amber-text);
+  }
+  .streak-pill svg { width: 13px; height: 13px; }
+
+  /* ─── bottom tab bar ─── */
+  .tab-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    max-width: 460px;
+    margin: 0 auto;
+    background: rgba(15,15,17,0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    padding: 8px 4px max(8px, env(safe-area-inset-bottom));
+    z-index: 10;
+  }
+  .tab {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 6px 4px; border: none; background: transparent;
+    color: var(--hint); font-size: 10px; font-weight: 500;
+    cursor: pointer; border-radius: var(--r-sm);
+    transition: color .15s;
+    font-family: var(--sans);
+    letter-spacing: .02em;
+  }
+  .tab svg { width: 22px; height: 22px; stroke-width: 1.6; }
+  .tab.active { color: var(--accent-text); }
+
+  /* ─── screens ─── */
+  .screen { display: none; padding: 16px; }
+  .screen.active { display: block; }
+
+  /* ─── cards ─── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 18px;
+    margin-bottom: 12px;
+  }
+
+  /* ─── domain badges ─── */
+  .badge {
+    display: inline-block; font-size: 11px; font-weight: 500;
+    padding: 3px 9px; border-radius: 20px; margin-bottom: 12px;
+    letter-spacing: .01em;
+  }
+  .b-cluster   { background: rgba(91,106,240,.15); color: #9ba8f8; border: 1px solid rgba(91,106,240,.25); }
+  .b-workloads { background: rgba(34,199,122,.1);  color: #5ddea0; border: 1px solid rgba(34,199,122,.2); }
+  .b-services  { background: rgba(56,161,230,.1);  color: #7fc8f5; border: 1px solid rgba(56,161,230,.2); }
+  .b-storage   { background: rgba(224,154,48,.1);  color: #f0bb6a; border: 1px solid rgba(224,154,48,.2); }
+  .b-security  { background: rgba(210,80,220,.1);  color: #e098f0; border: 1px solid rgba(210,80,220,.2); }
+  .b-troubleshoot { background: rgba(224,82,82,.1); color: #f08080; border: 1px solid rgba(224,82,82,.2); }
+
+  /* ─── flash cards ─── */
+  .flash-q { font-size: 16px; font-weight: 500; color: var(--text); line-height: 1.5; margin-bottom: 16px; }
+  .flash-a {
+    font-size: 14px; color: var(--muted); line-height: 1.7;
+    background: var(--surface2); border-radius: var(--r-sm);
+    padding: 14px; display: none; margin-bottom: 12px;
+  }
+  .flash-a.revealed { display: block; }
+  .flash-a code {
+    font-family: var(--mono); font-size: 12px;
+    background: rgba(255,255,255,0.06); padding: 2px 6px;
+    border-radius: 4px; color: var(--accent-text);
+  }
+
+  /* ─── buttons ─── */
+  .btn {
+    border: 1px solid var(--border2); background: transparent;
+    border-radius: var(--r-sm); padding: 8px 14px;
+    font-size: 13px; font-weight: 500; color: var(--text);
+    cursor: pointer; font-family: var(--sans);
+    transition: background .15s, border-color .15s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn:hover { background: var(--surface2); }
+  .btn:active { opacity: .75; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn-accent { background: var(--accent-bg); border-color: rgba(91,106,240,.35); color: var(--accent-text); }
+  .btn-accent:hover { background: rgba(91,106,240,.2); }
+  .btn-ghost { border-color: transparent; color: var(--muted); font-size: 12px; padding: 6px 10px; }
+  .btn-ghost:hover { background: var(--surface2); }
+  .btn-wide { width: 100%; justify-content: center; }
+
+  .ai-btn {
+    width: 100%; margin-top: 14px; border: 1px dashed var(--border2);
+    background: transparent; border-radius: var(--r-sm);
+    padding: 10px 14px; font-size: 13px; color: var(--muted);
+    cursor: pointer; font-family: var(--sans); font-weight: 500;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    transition: border-color .15s, color .15s;
+  }
+  .ai-btn:hover { border-color: var(--accent); color: var(--accent-text); }
+  .ai-btn svg { width: 15px; height: 15px; }
+
+  .ai-box {
+    margin-top: 12px; font-size: 13px; color: var(--muted); line-height: 1.7;
+    background: var(--surface2); padding: 14px; border-radius: var(--r-sm);
+    display: none;
+    border-left: 2px solid var(--accent);
+  }
+  .ai-box.visible { display: block; }
+
+  .loader {
+    width: 13px; height: 13px;
+    border: 2px solid var(--border2);
+    border-top-color: var(--accent-text);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ─── nav row ─── */
+  .nav-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 4px;
+  }
+  .progress-text { font-size: 12px; color: var(--hint); }
+
+  /* ─── quiz ─── */
+  .quiz-opt {
+    width: 100%; text-align: left; margin-bottom: 8px;
+    padding: 11px 14px; font-size: 14px; line-height: 1.4;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--r-sm); cursor: pointer;
+    font-family: var(--sans); color: var(--text);
+    transition: background .12s, border-color .12s;
+  }
+  .quiz-opt:hover:not(:disabled) { background: rgba(91,106,240,.08); border-color: rgba(91,106,240,.3); }
+  .quiz-opt:disabled { cursor: default; }
+  .quiz-opt.correct { background: var(--green-bg); border-color: rgba(34,199,122,.35); color: var(--green-text); }
+  .quiz-opt.wrong   { background: var(--red-bg);   border-color: rgba(224,82,82,.35);  color: var(--red-text); }
+  .quiz-opt.show-correct { background: var(--green-bg); border-color: rgba(34,199,122,.35); color: var(--green-text); }
+
+  .quiz-explain {
+    font-size: 13px; color: var(--muted); line-height: 1.7;
+    background: var(--surface2); border-radius: var(--r-sm);
+    padding: 12px 14px; display: none; margin-top: 10px;
+    border-left: 2px solid var(--green);
+  }
+  .quiz-explain.visible { display: block; }
+  .quiz-explain code {
+    font-family: var(--mono); font-size: 12px;
+    background: rgba(255,255,255,0.06); padding: 2px 6px;
+    border-radius: 4px; color: var(--accent-text);
+  }
+
+  .score-inline { font-size: 12px; color: var(--hint); }
+
+  /* ─── kubectl ref ─── */
+  .search-box {
+    width: 100%; padding: 10px 14px; font-size: 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); color: var(--text);
+    font-family: var(--sans); outline: none; margin-bottom: 12px;
+    transition: border-color .15s;
+  }
+  .search-box:focus { border-color: var(--border2); }
+  .search-box::placeholder { color: var(--hint); }
+
+  .cmd-section { margin-bottom: 4px; }
+  .section-label {
+    font-size: 10px; font-weight: 600; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--hint);
+    padding: 12px 0 8px; display: block;
+  }
+  .cmd-row {
+    display: flex; flex-direction: column; gap: 4px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .cmd-row:last-child { border-bottom: none; }
+  .cmd-code {
+    font-family: var(--mono); font-size: 12px;
+    color: var(--accent-text); font-weight: 500;
+  }
+  .cmd-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  /* ─── stats ─── */
+  .stat-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; margin-bottom: 20px;
+  }
+  .stat {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 16px 14px;
+  }
+  .stat-val { font-size: 28px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; line-height: 1; }
+  .stat-lbl { font-size: 12px; color: var(--hint); margin-top: 4px; }
+
+  .domain-row { margin-bottom: 12px; }
+  .domain-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+  .domain-name { font-size: 13px; color: var(--muted); }
+  .domain-pct  { font-size: 12px; color: var(--hint); font-family: var(--mono); }
+  .bar { height: 5px; background: var(--surface2); border-radius: 3px; }
+  .bar-fill { height: 100%; border-radius: 3px; background: var(--accent); transition: width .5s; }
+  .bar-fill.low { background: var(--red); }
+  .bar-fill.mid { background: var(--amber); }
+
+  .api-notice {
+    background: var(--amber-bg); border: 1px solid rgba(224,154,48,.2);
+    border-radius: var(--r-sm); padding: 12px 14px;
+    font-size: 13px; color: var(--amber-text); line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .api-notice strong { color: var(--amber); }
+
+  .section-hed { font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 10px; letter-spacing: .01em; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .loader { animation: none; border-top-color: var(--muted); }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-wordmark">CKA<span>prep</span></div>
+    <div class="streak-pill">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z"/></svg>
+      <span id="streak-num">0</span> day streak
+    </div>
+  </div>
+
+  <!-- FLASH CARDS -->
+  <div class="screen active" id="screen-flash">
+    <div class="card" id="flash-card">
+      <span class="badge" id="flash-badge"></span>
+      <div class="flash-q" id="flash-q"></div>
+      <div class="flash-a" id="flash-a"></div>
+      <div class="btn-row">
+        <button class="btn" id="reveal-btn" onclick="revealAnswer()">Show answer</button>
+        <button class="btn btn-accent" id="next-btn" style="display:none" onclick="nextFlash()">
+          Next
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+      <button class="ai-btn" id="explain-btn" onclick="explainCard()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/><path stroke-linecap="round" stroke-linejoin="round" d="M18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z"/></svg>
+        Explain deeper with AI
+      </button>
+      <div class="ai-box" id="ai-box"></div>
+    </div>
+    <div class="nav-row">
+      <span class="progress-text" id="flash-progress">Card 1 of 30</span>
+      <button class="btn btn-ghost" onclick="shuffleFlash()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+        Shuffle
+      </button>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="screen" id="screen-quiz">
+    <div class="card">
+      <span class="badge" id="quiz-badge"></span>
+      <div class="flash-q" id="quiz-q"></div>
+      <div id="quiz-opts"></div>
+      <div class="quiz-explain" id="quiz-explain"></div>
+      <button class="btn btn-accent btn-wide" id="quiz-next-btn" style="display:none;margin-top:14px" onclick="nextQuiz()">
+        Next question
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+    <div class="nav-row">
+      <span class="progress-text" id="quiz-progress">Question 1 of 15</span>
+      <span class="score-inline" id="quiz-score">Score: 0/0</span>
+    </div>
+  </div>
+
+  <!-- KUBECTL -->
+  <div class="screen" id="screen-cmd">
+    <input class="search-box" type="text" id="cmd-search" placeholder="Search commands..." oninput="filterCmds(this.value)" autocomplete="off" autocorrect="off" spellcheck="false">
+    <div id="cmd-list"></div>
+  </div>
+
+  <!-- STATS -->
+  <div class="screen" id="screen-stats">
+    <div class="stat-grid">
+      <div class="stat"><div class="stat-val" id="s-cards">0</div><div class="stat-lbl">Cards reviewed</div></div>
+      <div class="stat"><div class="stat-val" id="s-acc">—</div><div class="stat-lbl">Quiz accuracy</div></div>
+      <div class="stat"><div class="stat-val" id="s-streak">0</div><div class="stat-lbl">Day streak</div></div>
+      <div class="stat"><div class="stat-val" id="s-weak" style="font-size:16px;padding-top:4px">—</div><div class="stat-lbl">Weakest domain</div></div>
+    </div>
+
+    <div class="section-hed">Domain accuracy</div>
+    <div id="domain-bars"></div>
+
+    <div style="margin-top:20px">
+      <div class="api-notice">
+        <strong>AI explain feature:</strong> The "Explain deeper" button in the Flash tab calls the Claude API. It works when you open this file from claude.ai. If you save and open locally, paste your Anthropic API key into the field below.
+      </div>
+      <label style="font-size:12px;color:var(--hint);display:block;margin-bottom:6px">Anthropic API key (optional — for local use)</label>
+      <input type="password" id="api-key-input" placeholder="sk-ant-..." style="width:100%;padding:9px 12px;font-size:13px;font-family:var(--mono);background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);outline:none;margin-bottom:8px" oninput="saveApiKey(this.value)">
+      <button class="btn btn-ghost" onclick="resetStats()">Reset all stats</button>
+    </div>
+  </div>
+
+  <!-- BOTTOM TAB BAR -->
+  <nav class="tab-bar">
+    <button class="tab active" id="tab-flash" onclick="showTab('flash')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+      Flash
+    </button>
+    <button class="tab" id="tab-quiz" onclick="showTab('quiz')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      Quiz
+    </button>
+    <button class="tab" id="tab-cmd" onclick="showTab('cmd')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+      kubectl
+    </button>
+    <button class="tab" id="tab-stats" onclick="showTab('stats')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Stats
+    </button>
+  </nav>
+</div>
+
+<script>
+const DOMAINS = {
+  cluster:     { label: 'Cluster Architecture', cls: 'b-cluster' },
+  workloads:   { label: 'Workloads & Scheduling', cls: 'b-workloads' },
+  services:    { label: 'Services & Networking', cls: 'b-services' },
+  storage:     { label: 'Storage', cls: 'b-storage' },
+  security:    { label: 'Security', cls: 'b-security' },
+  troubleshoot:{ label: 'Troubleshooting', cls: 'b-troubleshoot' },
+};
+
+const FLASHCARDS = [
+  { d:'cluster', q:'What is the role of the kube-apiserver?', a:'The API server is the front door to the cluster — every request (from kubectl, controllers, or nodes) goes through it. It validates and authenticates requests, persists state to etcd, and orchestrates all cluster components. On the exam, remember it\'s also the only component that talks directly to etcd.' },
+  { d:'cluster', q:'What does etcd store and why is it critical?', a:'etcd is a distributed key-value store holding the entire cluster state: pod specs, configs, secrets, RBAC rules, service endpoints. If etcd is lost without a backup, the cluster state is gone. Back it up with <code>etcdctl snapshot save /backup.db</code> — you\'ll need to supply --cacert, --cert, --key, and --endpoints flags.' },
+  { d:'cluster', q:'What is the difference between a static pod and a regular pod?', a:'Static pods are managed directly by the kubelet on a specific node — they live in <code>/etc/kubernetes/manifests/</code> and bypass the API server scheduler. Control plane components (API server, etcd, controller-manager, scheduler) are typically static pods. The API server still creates a mirror pod object you can see with kubectl, but it can\'t delete it.' },
+  { d:'cluster', q:'What does the kube-controller-manager do?', a:'It runs a collection of control loops ("controllers") that watch cluster state and reconcile it toward the desired state. Examples: the Deployment controller creates ReplicaSets, the Node controller marks nodes NotReady after heartbeat timeout, the Job controller tracks pod completions. It\'s a single binary running many controllers.' },
+  { d:'cluster', q:'What is the role of kube-scheduler?', a:'The scheduler watches for newly created pods with no assigned node and selects the best node for each one. It evaluates resource requests, node affinity/anti-affinity, taints and tolerations, pod topology spread, and available capacity. It does not start the pod — it just updates the pod spec with nodeName; the kubelet does the rest.' },
+  { d:'cluster', q:'What is kubelet and what does it do?', a:'kubelet is an agent running on every node. It watches the API server for pods assigned to its node, starts/stops containers via the container runtime (containerd), reports node and pod status back, and manages static pods from /etc/kubernetes/manifests/. If kubelet is down, the node shows NotReady.' },
+  { d:'workloads', q:'A Deployment is stuck in rollout. How do you investigate and undo?', a:'Check status with <code>kubectl rollout status deployment/my-app</code>. Get detailed events with <code>kubectl describe deployment my-app</code>. View history with <code>kubectl rollout history deployment/my-app</code>. Roll back with <code>kubectl rollout undo deployment/my-app</code> or to a specific revision: <code>kubectl rollout undo deployment/my-app --to-revision=2</code>.' },
+  { d:'workloads', q:'What is the difference between a DaemonSet and a Deployment?', a:'A Deployment runs N replicas distributed across nodes (scheduler decides where). A DaemonSet runs exactly one pod per node — including new nodes as they join. Useful for log collectors (Fluentd), monitoring agents (node-exporter), network plugins (CNI). To also run on control plane nodes with taints, add a toleration for <code>node-role.kubernetes.io/control-plane:NoSchedule</code>.' },
+  { d:'workloads', q:'How do you drain a node for maintenance?', a:'Run <code>kubectl drain node-name --ignore-daemonsets --delete-emptydir-data</code>. This evicts all pods (respecting PodDisruptionBudgets) and marks the node unschedulable. After maintenance: <code>kubectl uncordon node-name</code>. To just mark unschedulable without eviction: <code>kubectl cordon node-name</code>.' },
+  { d:'workloads', q:'What is the difference between resource requests and limits?', a:'Requests are what the scheduler uses to find a node with enough capacity — the pod is guaranteed that much. Limits are the maximum the container is allowed to use. Exceeding CPU limit causes throttling. Exceeding memory limit causes the container to be OOMKilled (exit code 137). Always set both in production; the exam often tests pods failing due to missing or wrong values.' },
+  { d:'workloads', q:'What is a ConfigMap and how is it different from a Secret?', a:'Both store configuration data. ConfigMaps store plain text (app config, env vars, config files). Secrets store base64-encoded sensitive data (passwords, tokens, certs) and have extra access controls. Both can be mounted as volumes or injected as environment variables. On the exam: <code>kubectl create configmap my-cm --from-literal=key=val</code> and <code>kubectl create secret generic my-sec --from-literal=pw=abc</code>.' },
+  { d:'services', q:'What is the difference between ClusterIP, NodePort, and LoadBalancer service types?', a:'ClusterIP (default): internal only, stable virtual IP inside the cluster. NodePort: exposes a high port (30000–32767) on every node\'s IP — traffic routes to the service. LoadBalancer: provisions a cloud load balancer (AWS ELB, GCP); only works with a cloud provider or MetalLB on-prem. For the exam, also know ExternalName (CNAME alias) and Headless services (no ClusterIP, returns pod IPs directly).' },
+  { d:'services', q:'A pod can\'t reach another pod by service name. Walk through debugging.', a:'1) Check endpoints: <code>kubectl get endpoints service-name</code> — empty means selector mismatch. 2) Verify selector vs pod labels: <code>kubectl get pods --show-labels</code>. 3) Check if CoreDNS pods are running: <code>kubectl get pods -n kube-system</code>. 4) Test DNS from inside a pod: <code>kubectl exec -it mypod -- nslookup service-name</code>. 5) Check NetworkPolicies blocking traffic.' },
+  { d:'services', q:'What is an Ingress and when do you use it instead of a Service?', a:'An Ingress is an L7 (HTTP/HTTPS) routing rule that maps hostnames and paths to Services — think of it as a reverse proxy config. A single LoadBalancer IP can serve many services via path routing. Requires an Ingress Controller (nginx, traefik, etc.) to be installed. Use Service LoadBalancer for non-HTTP traffic; use Ingress for HTTP/HTTPS to avoid one LB per service.' },
+  { d:'storage', q:'What is the relationship between a PV, PVC, and StorageClass?', a:'PersistentVolume (PV) is a piece of storage provisioned in the cluster (can be static or dynamically created). PersistentVolumeClaim (PVC) is a request for storage by a workload — it asks for a size and access mode. StorageClass defines the provisioner (EBS, GCE PD, NFS) and enables dynamic provisioning: when a PVC is created, a PV is automatically created and bound. If the PVC is Pending, check size, access mode, and StorageClass match.' },
+  { d:'storage', q:'What are the PersistentVolume access modes?', a:'ReadWriteOnce (RWO): mounted read-write by a single node. ReadOnlyMany (ROX): mounted read-only by many nodes. ReadWriteMany (RWX): mounted read-write by many nodes (requires distributed storage like NFS, CephFS, EFS). ReadWriteOncePod (RWOP, K8s 1.22+): only one pod at a time. The PVC and PV must agree on access mode for binding to succeed.' },
+  { d:'security', q:'How does RBAC work in Kubernetes?', a:'4 objects: Role (what actions on what resources, namespace-scoped), ClusterRole (same but cluster-wide), RoleBinding (grants a Role to subjects in a namespace), ClusterRoleBinding (grants a ClusterRole cluster-wide). Subjects can be User, Group, or ServiceAccount. A ClusterRole can be bound with a RoleBinding to limit it to a single namespace. <code>kubectl auth can-i list pods --as=system:serviceaccount:ns:sa</code> to test.' },
+  { d:'security', q:'What does a NetworkPolicy do and what is the default?', a:'NetworkPolicies control pod-to-pod and pod-to-external traffic at L3/L4. By default (no policy) all traffic is allowed. Once any NetworkPolicy selects a pod, all traffic not explicitly allowed is denied. They are additive — multiple policies are ORed. Requires a CNI that supports NetworkPolicy (Calico, Cilium, Weave). Flannel alone does not enforce NetworkPolicies.' },
+  { d:'security', q:'What is a ServiceAccount and why does it matter?', a:'Every pod runs as a ServiceAccount (default: "default" in its namespace). Pods use the SA token (auto-mounted at /var/run/secrets/kubernetes.io/serviceaccount/token) to authenticate API calls. Assign RBAC roles to SAs to give pods cluster permissions. For security, set <code>automountServiceAccountToken: false</code> on pods that don\'t need API access.' },
+  { d:'security', q:'What is a CertificateSigningRequest and when is it used?', a:'CSRs are used to issue cluster certificates — for example, when adding a new user. Flow: generate a private key, create a CSR, submit it as a Kubernetes CSR object, approve with <code>kubectl certificate approve csr-name</code>, then retrieve the signed cert. On the exam this often appears as: "create a user and give them access to a namespace using RBAC."' },
+  { d:'troubleshoot', q:'A pod is stuck in CrashLoopBackOff. Walk through debugging.', a:'1) <code>kubectl describe pod pod-name</code> — check Events and Last State exit code. 2) <code>kubectl logs pod-name --previous</code> — logs from the last crashed run. Exit code 1 = app error. Exit code 137 = OOMKilled (raise memory limit). Exit code 126/127 = bad command/entrypoint. Exit code 1 with "permission denied" = filesystem permission issue. Add <code>--timestamps</code> to logs for timing context.' },
+  { d:'troubleshoot', q:'A node shows NotReady. What do you check?', a:'SSH to the node, then: 1) <code>systemctl status kubelet</code> — is it running? 2) <code>journalctl -u kubelet -n 50</code> — check for cert errors, unreachable API server, disk pressure. 3) Check disk/memory: <code>df -h</code>, <code>free -m</code>. 4) <code>kubectl describe node node-name</code> — look at Conditions section for MemoryPressure, DiskPressure, PIDPressure. 5) Check container runtime: <code>systemctl status containerd</code>.' },
+  { d:'troubleshoot', q:'How do you debug a service that returns connection refused?', a:'1) Check if the service exists: <code>kubectl get svc</code>. 2) Check endpoints: <code>kubectl get endpoints svc-name</code> — if empty, selector is wrong. 3) Check pod readiness: pods must pass readiness probes to become endpoints. 4) Check the target port matches what the app is listening on. 5) Use a temp pod: <code>kubectl run tmp --image=busybox --rm -it -- wget -O- service-name:port</code>.' },
+  { d:'troubleshoot', q:'How do you interpret kubectl describe output for a failing pod?', a:'Focus on the Events section at the bottom — it shows the real error in chronological order. Common messages: "Back-off pulling image" = bad image name or registry auth. "FailedScheduling" = no node fits (check resource requests, taints, node selectors). "OOMKilled" = memory limit too low. "CreateContainerConfigError" = missing ConfigMap or Secret referenced in pod spec.' },
+  { d:'workloads', q:'What is a Job vs a CronJob?', a:'A Job runs a pod to completion and ensures it succeeds (retries on failure). Use for batch work, migrations, one-off tasks. Set <code>spec.completions</code> for how many successful completions needed, <code>spec.parallelism</code> for concurrent pods. A CronJob creates Jobs on a schedule using cron syntax. On the exam: <code>kubectl create job test --image=busybox -- echo hello</code> and <code>kubectl create cronjob ping --image=busybox --schedule="*/5 * * * *" -- date</code>.' },
+  { d:'workloads', q:'What are Init Containers and when do you use them?', a:'Init containers run to completion before app containers start. They run sequentially in order. Use cases: wait for a dependency (database, config service), pre-populate a shared volume, run DB migrations before the app starts. They share volumes with the main container but have separate images and resource limits. If an init container fails, Kubernetes restarts the pod (depending on restartPolicy).' },
+  { d:'cluster', q:'How do you upgrade a Kubernetes cluster using kubeadm?', a:'1) Upgrade control plane: <code>apt-get update && apt-get install -y kubeadm=1.30.x</code>, then <code>kubeadm upgrade apply v1.30.x</code>. 2) Upgrade kubelet and kubectl on the control plane node. 3) For each worker: drain the node, upgrade kubeadm, run <code>kubeadm upgrade node</code>, upgrade kubelet/kubectl, restart kubelet, uncordon. Do one minor version at a time — you can\'t skip versions.' },
+  { d:'storage', q:'What happens to a PV when its PVC is deleted? What is the reclaim policy?', a:'Depends on the PersistentVolumeReclaimPolicy: Retain = PV stays with data intact, must be manually reclaimed. Delete = PV and underlying storage are deleted. Recycle (deprecated) = basic scrub and made available again. Set on the StorageClass or PV. For the exam: statically provisioned PVs default to Retain; dynamically provisioned (via StorageClass) default to Delete.' },
+  { d:'services', q:'What is DNS resolution format inside a Kubernetes cluster?', a:'Full format: <code>service-name.namespace.svc.cluster.local</code>. From within the same namespace, just <code>service-name</code> works. Cross-namespace: <code>service-name.other-namespace</code>. For headless services, DNS returns the individual pod IPs. StatefulSet pods get stable DNS: <code>pod-name.service-name.namespace.svc.cluster.local</code>. Check /etc/resolv.conf inside a pod to see the search domains.' },
+  { d:'security', q:'What is a PodSecurityAdmission/PodSecurityStandard?', a:'The successor to PodSecurityPolicy (removed in 1.25). Three built-in policy levels: Privileged (unrestricted), Baseline (prevents known privilege escalations), Restricted (hardened, requires non-root, drops capabilities). Applied by labeling namespaces: <code>pod-security.kubernetes.io/enforce: restricted</code>. Also warn and audit modes. On the exam, focus on labeling namespaces and understanding what each level blocks.' },
+  { d:'troubleshoot', q:'How do you check cluster-level events for recent failures?', a:'<code>kubectl get events -A --sort-by=.metadata.creationTimestamp</code> shows all events sorted by time. Filter to a namespace: <code>kubectl get events -n my-ns</code>. Events are stored for ~1 hour by default. For deeper history, check control plane logs: <code>kubectl logs -n kube-system kube-apiserver-node-name</code>. For nodes, use <code>journalctl</code> via SSH.' },
+];
+
+const QUIZ = [
+  { d:'workloads', q:'You need a pod to run on every node, including nodes that join later. Which resource is correct?', opts:['Deployment with nodeAffinity','DaemonSet','ReplicaSet with pod anti-affinity','StatefulSet'], c:1, ex:'A DaemonSet ensures exactly one pod per node automatically. To also run on control plane nodes (which have taints), add a toleration for <code>node-role.kubernetes.io/control-plane:NoSchedule</code>.' },
+  { d:'cluster', q:'Which command correctly backs up etcd data?', opts:['kubectl backup etcd --output=/backup.db','etcdctl snapshot save /backup.db (with cert flags)','kubectl exec etcd-pod -- save /backup.db','cp -r /var/lib/etcd /backup'], c:1, ex:'<code>etcdctl snapshot save</code> is the correct tool. In the exam you must add --endpoints=https://127.0.0.1:2379, --cacert, --cert, and --key. Find these values in the etcd static pod manifest at /etc/kubernetes/manifests/etcd.yaml.' },
+  { d:'services', q:'kubectl get endpoints my-service returns an empty list. What is the most likely cause?', opts:['Service type is wrong','Pod label selector does not match pod labels','The namespace does not exist','Port 80 is already in use'], c:1, ex:'Empty endpoints means the Service selector cannot find matching pods. Run <code>kubectl get pods --show-labels</code> and compare to <code>kubectl describe svc my-service</code> — the selector must exactly match at least one running, ready pod.' },
+  { d:'security', q:'Which combination grants a ServiceAccount permission to list pods cluster-wide?', opts:['Role + RoleBinding','ClusterRole + RoleBinding in the target namespace','ClusterRole + ClusterRoleBinding','NetworkPolicy + ServiceAccount'], c:2, ex:'ClusterRole defines what (list pods on all resources). ClusterRoleBinding binds it cluster-wide to the ServiceAccount. Note: ClusterRole + RoleBinding (option B) restricts the ClusterRole to a single namespace — useful for limiting scope.' },
+  { d:'storage', q:'A PVC is stuck in Pending after creation. What should you check first?', opts:['Restart the kube-apiserver','No PV matches the access mode, size, or StorageClass','The pod referencing the PVC is not running','The namespace has a ResourceQuota'], c:1, ex:'<code>kubectl describe pvc my-pvc</code> will show "no persistent volumes available" or "storageclass not found". The PV must match the PVC\'s requested size (≥), access modes (exact match), and StorageClass name.' },
+  { d:'troubleshoot', q:'A node shows NotReady. What is your first action after identifying the node?', opts:['Immediately delete and recreate the node','SSH to the node and check kubelet: systemctl status kubelet','Restart the kube-apiserver','Drain all pods from the node'], c:1, ex:'NotReady almost always means kubelet is down or disconnected. SSH to the node: <code>systemctl status kubelet</code> and <code>journalctl -u kubelet -n 50</code>. Common causes: kubelet crash, TLS cert expired, disk pressure, or the API server became unreachable.' },
+  { d:'workloads', q:'Which field in a Deployment spec sets the desired number of pod replicas?', opts:['spec.count','spec.replicas','spec.size','spec.pods'], c:1, ex:'<code>spec.replicas</code> is the field. You can also set it imperatively: <code>kubectl scale deployment my-app --replicas=5</code>. The Deployment controller continuously reconciles the actual count toward this number.' },
+  { d:'cluster', q:'Which control plane component selects which node a pending pod runs on?', opts:['kubelet','kube-proxy','kube-scheduler','kube-controller-manager'], c:2, ex:'kube-scheduler watches for pods with no nodeName set and runs scoring algorithms (resource fit, affinity, taints) to select the best node. It updates spec.nodeName — the kubelet on that node then starts the pod.' },
+  { d:'security', q:'What happens the moment you apply a NetworkPolicy that selects pod A?', opts:['Nothing — NetworkPolicies are informational only','All traffic to/from pod A is allowed as before','All traffic not explicitly allowed by any policy selecting A is denied','The pod is restarted'], c:2, ex:'NetworkPolicies are a whitelist model. As soon as any policy selects a pod, default-deny applies for that traffic direction (ingress/egress). Multiple policies are ORed — they only add permissions, never remove them. CNI must support NetworkPolicies (Flannel alone does not).' },
+  { d:'services', q:'Which DNS name resolves to Service "web" in namespace "frontend" from another namespace?', opts:['web.frontend','web.frontend.svc','web.frontend.svc.cluster.local','frontend/web'], c:2, ex:'Full form: <code>service.namespace.svc.cluster.local</code>. From within the same namespace you can use just <code>web</code>. Cross-namespace requires at minimum <code>web.frontend</code>. The full FQDN always works everywhere in the cluster.' },
+  { d:'workloads', q:'A container exits with code 137. What does this mean?', opts:['Command not found (bad entrypoint)','App exited normally','OOMKilled — container exceeded memory limit','Segmentation fault'], c:2, ex:'Exit code 137 = 128 + 9 (SIGKILL). Kubernetes sends SIGKILL when the container exceeds its memory limit. Fix: increase <code>resources.limits.memory</code> or find the memory leak. Verify with <code>kubectl describe pod</code> — look for "OOMKilled" in Last State.' },
+  { d:'storage', q:'Which PVC access mode allows mounting by multiple nodes simultaneously for read-write access?', opts:['ReadWriteOnce (RWO)','ReadOnlyMany (ROX)','ReadWriteMany (RWX)','ReadWriteOncePod (RWOP)'], c:2, ex:'RWX allows multiple nodes to mount the volume read-write simultaneously. Requires distributed storage: NFS, CephFS, AWS EFS. Standard block storage (AWS EBS, GCE PD) only supports RWO. Always check the storage provider\'s supported access modes.' },
+  { d:'cluster', q:'Where does the kubelet look for static pod manifests by default?', opts:['/etc/kubernetes/pods/','/var/lib/kubelet/static/','spec.staticPodPath in kubelet config (default: /etc/kubernetes/manifests/)','The API server provides them via watch'], c:2, ex:'Static pod manifests live in the directory specified by staticPodPath in the kubelet config (commonly /etc/kubernetes/manifests/). The kubelet watches this directory — create or modify a file and the pod starts/restarts automatically. No API server involvement.' },
+  { d:'security', q:'A pod does not need to call the Kubernetes API. What should you do for security?', opts:['Delete the default ServiceAccount','Set automountServiceAccountToken: false on the pod','Apply a NetworkPolicy blocking port 443','Use a restricted PodSecurityStandard'], c:1, ex:'Setting <code>automountServiceAccountToken: false</code> prevents the SA token from being mounted into the pod, reducing the attack surface. If the pod is compromised, an attacker cannot use the token to make API calls. This is a CKA security best practice.' },
+  { d:'troubleshoot', q:'You need to run a quick DNS test from inside a pod. Which command works?', opts:['kubectl dns-test pod-name service-name','kubectl exec -it mypod -- nslookup service-name','kubectl get endpoints service-name','kubectl describe svc service-name'], c:1, ex:'<code>kubectl exec -it mypod -- nslookup service-name</code> runs nslookup inside the pod\'s network namespace. If that fails, try <code>nslookup service-name.namespace.svc.cluster.local</code>. Also useful: <code>cat /etc/resolv.conf</code> inside the pod to verify search domains.' },
+];
+
+const CMDS = [
+  { sec:'Pods & workloads', items:[
+    { cmd:'kubectl get pods -A', desc:'List all pods in every namespace' },
+    { cmd:'kubectl get pods -o wide', desc:'Show pods with node assignment and IP' },
+    { cmd:'kubectl describe pod <name>', desc:'Full detail, events, and container state' },
+    { cmd:'kubectl logs <pod> --previous', desc:'Logs from the last crashed container run' },
+    { cmd:'kubectl logs <pod> -c <container>', desc:'Logs for a specific container in a multi-container pod' },
+    { cmd:'kubectl exec -it <pod> -- sh', desc:'Open a shell inside a running container' },
+    { cmd:'kubectl run tmp --image=busybox --rm -it -- sh', desc:'Disposable debug pod — auto-deleted on exit' },
+    { cmd:'kubectl delete pod <name> --force --grace-period=0', desc:'Force-delete a stuck terminating pod' },
+  ]},
+  { sec:'Deployments & rollouts', items:[
+    { cmd:'kubectl rollout status deploy/<name>', desc:'Watch a rollout in real-time' },
+    { cmd:'kubectl rollout history deploy/<name>', desc:'List revision history' },
+    { cmd:'kubectl rollout undo deploy/<name>', desc:'Roll back to the previous revision' },
+    { cmd:'kubectl rollout undo deploy/<name> --to-revision=2', desc:'Roll back to a specific revision' },
+    { cmd:'kubectl scale deploy/<name> --replicas=3', desc:'Set replica count immediately' },
+    { cmd:'kubectl set image deploy/<name> app=nginx:1.25', desc:'Update container image (triggers rollout)' },
+  ]},
+  { sec:'Nodes', items:[
+    { cmd:'kubectl get nodes -o wide', desc:'Node list with OS, kernel, container runtime' },
+    { cmd:'kubectl describe node <name>', desc:'Node conditions, capacity, and events' },
+    { cmd:'kubectl drain <node> --ignore-daemonsets --delete-emptydir-data', desc:'Evict pods and cordon node for maintenance' },
+    { cmd:'kubectl cordon <node>', desc:'Mark node unschedulable (no eviction)' },
+    { cmd:'kubectl uncordon <node>', desc:'Re-enable scheduling on a node' },
+    { cmd:'kubectl taint nodes <node> key=val:NoSchedule', desc:'Prevent pods without a matching toleration from scheduling' },
+    { cmd:'kubectl taint nodes <node> key:NoSchedule-', desc:'Remove a taint (note the trailing dash)' },
+  ]},
+  { sec:'Services & networking', items:[
+    { cmd:'kubectl get endpoints <svc>', desc:'Check if a Service has healthy pod targets' },
+    { cmd:'kubectl get svc -A', desc:'List all Services across namespaces' },
+    { cmd:'kubectl expose deploy/<name> --port=80 --target-port=8080', desc:'Create a Service for a Deployment' },
+    { cmd:'kubectl port-forward pod/<name> 8080:80', desc:'Forward local port to pod — useful for debugging' },
+  ]},
+  { sec:'Storage', items:[
+    { cmd:'kubectl get pv,pvc -A', desc:'List PersistentVolumes and Claims cluster-wide' },
+    { cmd:'kubectl describe pvc <name>', desc:'Check why a PVC is Pending or Bound' },
+    { cmd:'kubectl get storageclass', desc:'List available StorageClasses' },
+  ]},
+  { sec:'Config & secrets', items:[
+    { cmd:'kubectl create configmap my-cm --from-literal=key=val', desc:'Create a ConfigMap quickly' },
+    { cmd:'kubectl create configmap my-cm --from-file=app.conf', desc:'Create ConfigMap from a file' },
+    { cmd:'kubectl create secret generic my-sec --from-literal=pw=abc', desc:'Create an Opaque secret' },
+    { cmd:'kubectl get secret my-sec -o jsonpath="{.data.pw}" | base64 -d', desc:'Decode a secret value' },
+  ]},
+  { sec:'RBAC & security', items:[
+    { cmd:'kubectl auth can-i list pods --as=system:serviceaccount:ns:sa', desc:'Test RBAC permissions for a ServiceAccount' },
+    { cmd:'kubectl auth can-i list pods --as=dev-user', desc:'Test permissions for a user' },
+    { cmd:'kubectl create role pod-reader --verb=get,list --resource=pods', desc:'Create a Role (namespace-scoped)' },
+    { cmd:'kubectl create rolebinding bind-reader --role=pod-reader --user=jane', desc:'Bind a Role to a user' },
+    { cmd:'kubectl create clusterrole node-reader --verb=get,list --resource=nodes', desc:'Create a ClusterRole' },
+    { cmd:'kubectl certificate approve <csr-name>', desc:'Approve a pending CertificateSigningRequest' },
+  ]},
+  { sec:'Troubleshooting', items:[
+    { cmd:'kubectl get events -A --sort-by=.metadata.creationTimestamp', desc:'All cluster events in time order' },
+    { cmd:'kubectl top node', desc:'CPU/memory usage per node (needs metrics-server)' },
+    { cmd:'kubectl top pod -A', desc:'CPU/memory usage per pod' },
+    { cmd:'kubectl explain pod.spec.containers', desc:'API reference for any field — works without internet' },
+    { cmd:'systemctl status kubelet', desc:'Check kubelet health on a node (via SSH)' },
+    { cmd:'journalctl -u kubelet -n 50', desc:'Last 50 kubelet log lines (via SSH)' },
+    { cmd:'systemctl status containerd', desc:'Check container runtime health (via SSH)' },
+  ]},
+  { sec:'etcd', items:[
+    { cmd:'etcdctl snapshot save /tmp/snap.db', desc:'Backup etcd — must add --endpoints --cacert --cert --key' },
+    { cmd:'etcdctl snapshot restore /tmp/snap.db --data-dir=/var/lib/etcd-restore', desc:'Restore etcd from snapshot' },
+    { cmd:'ETCDCTL_API=3 etcdctl member list', desc:'List etcd cluster members' },
+  ]},
+];
+
+// ─── state ───
+let flashOrder = [], flashIdx = 0;
+let quizOrder = [], quizIdx = 0, quizCorrect = 0, quizTotal = 0;
+let domainWrong = {}, domainAsked = {};
+
+// ─── persistence ───
+function load(k, def) { try { return JSON.parse(localStorage.getItem(k)) ?? def; } catch { return def; } }
+function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+
+function saveApiKey(v) { save('cka_apikey', v); }
+function getApiKey() { return load('cka_apikey', '') || ''; }
+
+// ─── tab nav ───
+function showTab(t) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-'+t).classList.add('active');
+  document.getElementById('tab-'+t).classList.add('active');
+  if (t === 'stats') renderStats();
+}
+
+// ─── flash ───
+function shuffleArr(a) {
+  const r = [...a]; for (let i = r.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [r[i],r[j]]=[r[j],r[i]]; } return r;
+}
+
+function shuffleFlash() {
+  flashOrder = shuffleArr([...Array(FLASHCARDS.length).keys()]);
+  flashIdx = 0; renderFlash();
+}
+
+function renderFlash() {
+  const c = FLASHCARDS[flashOrder[flashIdx]];
+  const dom = DOMAINS[c.d];
+  const badge = document.getElementById('flash-badge');
+  badge.textContent = dom.label; badge.className = 'badge ' + dom.cls;
+  document.getElementById('flash-q').textContent = c.q;
+  document.getElementById('flash-a').innerHTML = c.a;
+  document.getElementById('flash-a').classList.remove('revealed');
+  document.getElementById('reveal-btn').style.display = '';
+  document.getElementById('next-btn').style.display = 'none';
+  document.getElementById('explain-btn').style.display = '';
+  document.getElementById('ai-box').classList.remove('visible');
+  document.getElementById('ai-box').textContent = '';
+  document.getElementById('flash-progress').textContent = 'Card ' + (flashIdx+1) + ' of ' + FLASHCARDS.length;
+}
+
+function revealAnswer() {
+  document.getElementById('flash-a').classList.add('revealed');
+  document.getElementById('reveal-btn').style.display = 'none';
+  document.getElementById('next-btn').style.display = '';
+  const total = load('cka_cards', 0) + 1;
+  save('cka_cards', total);
+}
+
+function nextFlash() {
+  flashIdx = (flashIdx + 1) % FLASHCARDS.length;
+  renderFlash();
+}
+
+async function explainCard() {
+  const btn = document.getElementById('explain-btn');
+  const box = document.getElementById('ai-box');
+  const q = FLASHCARDS[flashOrder[flashIdx]].q;
+  btn.innerHTML = '<span class="loader"></span> Asking Claude...';
+  btn.disabled = true;
+  box.textContent = '';
+  box.classList.add('visible');
+
+  const key = getApiKey();
+  const headers = { 'Content-Type': 'application/json' };
+  if (key) headers['x-api-key'] = key;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: 'You are a CKA exam coach. Give a concise, exam-focused explanation in 4-6 sentences. Focus on what matters in the exam environment: the exact commands, common pitfalls, and one quick memory trick. Write in plain text — no markdown, no bullet points, no headers.',
+        messages: [{ role: 'user', content: 'Explain this for the CKA exam: ' + q }]
+      })
+    });
+    const data = await res.json();
+    box.textContent = data.content?.[0]?.text || 'Could not load explanation — check API key in Stats tab.';
+  } catch(e) {
+    box.textContent = 'Network error. If using locally, add your API key in the Stats tab.';
+  }
+
+  btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg> Explain deeper with AI`;
+  btn.disabled = false;
+}
+
+// ─── quiz ───
+function renderQuiz() {
+  const q = QUIZ[quizOrder[quizIdx]];
+  const dom = DOMAINS[q.d];
+  const badge = document.getElementById('quiz-badge');
+  badge.textContent = dom.label; badge.className = 'badge ' + dom.cls;
+  document.getElementById('quiz-q').textContent = q.q;
+  const opts = document.getElementById('quiz-opts');
+  opts.innerHTML = '';
+  q.opts.forEach((o, i) => {
+    const b = document.createElement('button');
+    b.className = 'quiz-opt';
+    b.textContent = String.fromCharCode(65+i) + '.  ' + o;
+    b.onclick = () => answerQuiz(i, b, q);
+    opts.appendChild(b);
+  });
+  document.getElementById('quiz-next-btn').style.display = 'none';
+  const ex = document.getElementById('quiz-explain');
+  ex.innerHTML = ''; ex.classList.remove('visible');
+  document.getElementById('quiz-progress').textContent = 'Question ' + (quizIdx+1) + ' of ' + QUIZ.length;
+}
+
+function answerQuiz(chosen, btn, q) {
+  document.querySelectorAll('.quiz-opt').forEach(b => b.disabled = true);
+  quizTotal++;
+  if (!domainAsked[q.d]) domainAsked[q.d] = 0;
+  domainAsked[q.d]++;
+
+  if (chosen === q.c) {
+    btn.classList.add('correct');
+    quizCorrect++;
+  } else {
+    btn.classList.add('wrong');
+    document.querySelectorAll('.quiz-opt')[q.c].classList.add('show-correct');
+    if (!domainWrong[q.d]) domainWrong[q.d] = 0;
+    domainWrong[q.d]++;
+  }
+
+  const pct = Math.round(quizCorrect / quizTotal * 100);
+  document.getElementById('quiz-score').textContent = 'Score: ' + quizCorrect + '/' + quizTotal + ' (' + pct + '%)';
+  document.getElementById('quiz-explain').innerHTML = q.ex;
+  document.getElementById('quiz-explain').classList.add('visible');
+  document.getElementById('quiz-next-btn').style.display = '';
+  save('cka_quiz_correct', quizCorrect);
+  save('cka_quiz_total', quizTotal);
+  save('cka_domain_wrong', domainWrong);
+  save('cka_domain_asked', domainAsked);
+}
+
+function nextQuiz() {
+  quizIdx = (quizIdx + 1) % QUIZ.length;
+  renderQuiz();
+}
+
+// ─── kubectl ref ───
+function renderCmds(list) {
+  const el = document.getElementById('cmd-list');
+  el.innerHTML = '';
+  if (list.length === 0) { el.innerHTML = '<div style="color:var(--hint);font-size:13px;padding:20px 0;text-align:center">No commands match</div>'; return; }
+  list.forEach(sec => {
+    if (sec.items.length === 0) return;
+    const s = document.createElement('div');
+    s.className = 'cmd-section';
+    const lbl = document.createElement('span');
+    lbl.className = 'section-label'; lbl.textContent = sec.sec;
+    s.appendChild(lbl);
+    sec.items.forEach(c => {
+      const row = document.createElement('div');
+      row.className = 'cmd-row';
+      row.innerHTML = '<div class="cmd-code">' + c.cmd + '</div><div class="cmd-desc">' + c.desc + '</div>';
+      s.appendChild(row);
+    });
+    el.appendChild(s);
+  });
+}
+
+function filterCmds(q) {
+  const lq = q.toLowerCase();
+  if (!lq) { renderCmds(CMDS); return; }
+  const filtered = CMDS.map(sec => ({
+    sec: sec.sec,
+    items: sec.items.filter(c => c.cmd.toLowerCase().includes(lq) || c.desc.toLowerCase().includes(lq))
+  })).filter(s => s.items.length > 0);
+  renderCmds(filtered);
+}
+
+// ─── stats ───
+function renderStats() {
+  const cards = load('cka_cards', 0);
+  const qc = load('cka_quiz_correct', 0);
+  const qt = load('cka_quiz_total', 0);
+  const streak = load('cka_streak', 0);
+  document.getElementById('s-cards').textContent = cards;
+  document.getElementById('s-acc').textContent = qt > 0 ? Math.round(qc/qt*100) + '%' : '—';
+  document.getElementById('s-streak').textContent = streak;
+
+  const dw = load('cka_domain_wrong', {});
+  const da = load('cka_domain_asked', {});
+  let weakLabel = '—', worstRate = -1;
+  Object.entries(dw).forEach(([k, v]) => {
+    const asked = da[k] || 1;
+    const rate = v / asked;
+    if (rate > worstRate) { worstRate = rate; weakLabel = DOMAINS[k]?.label.split(' ')[0] || k; }
+  });
+  document.getElementById('s-weak').textContent = weakLabel;
+
+  const bars = document.getElementById('domain-bars');
+  bars.innerHTML = '';
+  Object.entries(DOMAINS).forEach(([key, dom]) => {
+    const wrong = dw[key] || 0;
+    const asked = da[key] || 0;
+    const pct = asked > 0 ? Math.round((1 - wrong/asked) * 100) : null;
+    const cls = pct === null ? '' : pct >= 80 ? '' : pct >= 60 ? 'mid' : 'low';
+    bars.innerHTML += '<div class="domain-row"><div class="domain-hdr"><span class="domain-name">'+dom.label+'</span><span class="domain-pct">'+(pct !== null ? pct+'%' : 'not tested')+'</span></div><div class="bar"><div class="bar-fill '+cls+'" style="width:'+(pct ?? 0)+'%"></div></div></div>';
+  });
+
+  const keyInput = document.getElementById('api-key-input');
+  if (keyInput && !keyInput.value) keyInput.value = getApiKey();
+}
+
+function resetStats() {
+  if (!confirm('Reset all study stats?')) return;
+  ['cka_cards','cka_quiz_correct','cka_quiz_total','cka_domain_wrong','cka_domain_asked','cka_streak','cka_last_visit'].forEach(k => localStorage.removeItem(k));
+  quizCorrect = 0; quizTotal = 0; domainWrong = {}; domainAsked = {};
+  renderStats();
+}
+
+// ─── streak ───
+function initStreak() {
+  const today = new Date().toDateString();
+  const last = load('cka_last_visit', null);
+  let streak = load('cka_streak', 0);
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  if (last === today) {}
+  else if (last === yesterday) { streak++; }
+  else { streak = 1; }
+  save('cka_streak', streak);
+  save('cka_last_visit', today);
+  document.getElementById('streak-num').textContent = streak;
+}
+
+// ─── init ───
+quizCorrect = load('cka_quiz_correct', 0);
+quizTotal = load('cka_quiz_total', 0);
+domainWrong = load('cka_domain_wrong', {});
+domainAsked = load('cka_domain_asked', {});
+
+shuffleFlash();
+quizOrder = shuffleArr([...Array(QUIZ.length).keys()]);
+renderQuiz();
+renderCmds(CMDS);
+initStreak();
+
+// restore quiz score display
+if (quizTotal > 0) {
+  document.getElementById('quiz-score').textContent = 'Score: ' + quizCorrect + '/' + quizTotal + ' (' + Math.round(quizCorrect/quizTotal*100) + '%)';
+}
+</script>
+</body>
+</html>
